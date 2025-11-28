@@ -797,6 +797,109 @@
         });
     }
 
+    // ===========================
+    // Project Filtering Functions
+    // ===========================
+
+    let currentFilter = 'all'; // Track current filter state
+    let isFiltering = false; // Prevent overlapping filter operations
+
+    /**
+     * Filter projects by programming language with enhanced animations
+     */
+    function filterProjects(filterValue) {
+        // Prevent overlapping filter operations
+        if (isFiltering || currentFilter === filterValue) return;
+        
+        isFiltering = true;
+        currentFilter = filterValue;
+
+        const projectCards = document.querySelectorAll('.project-card');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const projectsGrid = document.querySelector('.projects-grid');
+
+        // Update active filter button with smooth transition
+        filterButtons.forEach(btn => {
+            if (btn.getAttribute('data-filter') === filterValue) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Add filtering class to grid for CSS transitions
+        if (projectsGrid) {
+            projectsGrid.classList.add('filtering');
+        }
+
+        // Collect cards to show and hide
+        const cardsToShow = [];
+        const cardsToHide = [];
+
+        projectCards.forEach((card, index) => {
+            const cardLanguage = card.getAttribute('data-language');
+            const shouldShow = filterValue === 'all' || cardLanguage === filterValue;
+            
+            if (shouldShow) {
+                cardsToShow.push({ card, index });
+            } else {
+                cardsToHide.push({ card, index });
+            }
+        });
+
+        // Hide cards that should be hidden
+        cardsToHide.forEach(({ card }) => {
+            card.classList.add('filtered-out');
+            card.classList.remove('filtered-in');
+        });
+
+        // Show cards that should be visible with staggered animation
+        cardsToShow.forEach(({ card, index }) => {
+            card.classList.remove('filtered-out');
+            card.style.display = 'block';
+            
+            // Stagger the animation for a wave effect
+            setTimeout(() => {
+                card.classList.add('filtered-in');
+            }, index * 50); // 50ms delay between each card
+        });
+
+        // Reset filtering state after animations complete
+        setTimeout(() => {
+            // Hide cards that are filtered out
+            cardsToHide.forEach(({ card }) => {
+                card.style.display = 'none';
+            });
+
+            if (projectsGrid) {
+                projectsGrid.classList.remove('filtering');
+            }
+            
+            isFiltering = false;
+        }, Math.max(cardsToShow.length * 50 + 200, 300));
+    }
+
+    /**
+     * Initialize project filtering
+     */
+    function initProjectFiltering() {
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const projectCards = document.querySelectorAll('.project-card');
+
+        // Initialize all cards as visible
+        projectCards.forEach(card => {
+            card.classList.add('filtered-in');
+        });
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const filterValue = btn.getAttribute('data-filter');
+                filterProjects(filterValue);
+            });
+        });
+    }
+
     /**
      * Initialize the application
      */
@@ -813,6 +916,9 @@
         // Initialize animations
         initSkillAnimations();
         initProjectAnimations();
+
+        // Initialize project filtering
+        initProjectFiltering();
 
         // Initialize greeting bar
         initGreetingBar();
