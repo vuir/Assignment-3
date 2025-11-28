@@ -60,6 +60,20 @@
                     <a href="https://www.linkedin.com/in/hayatag" target="_blank" rel="noopener noreferrer" class="linkedin-link">
                         💼
                     </a>
+                    <!-- Weather Display -->
+                    <div class="weather-display" id="weather-display">
+                        <div class="weather-loading" id="weather-loading">Loading weather...</div>
+                        <div class="weather-content" id="weather-content" style="display: none;">
+                            <span class="weather-icon">🌤️</span>
+                            <span class="weather-info">
+                                <span class="weather-temp" id="weather-temp"></span>
+                                <span class="weather-desc" id="weather-desc"></span>
+                            </span>
+                        </div>
+                        <div class="weather-error" id="weather-error" style="display: none;">
+                            <span class="weather-error-text">Unable to load weather</span>
+                        </div>
+                    </div>
                 </div>
                 <button type="button" id="edit-name" class="greeting-btn edit-btn">Edit</button>
             </div>

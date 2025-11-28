@@ -25,6 +25,14 @@
     const editNameBtn = document.getElementById('edit-name'); // Edit name button
     const displayedName = document.getElementById('displayed-name'); // Span to display saved name
 
+    // Weather Display Elements
+    const weatherDisplay = document.getElementById('weather-display'); // Weather display container
+    const weatherLoading = document.getElementById('weather-loading'); // Weather loading indicator
+    const weatherContent = document.getElementById('weather-content'); // Weather content display
+    const weatherError = document.getElementById('weather-error'); // Weather error message
+    const weatherTemp = document.getElementById('weather-temp'); // Weather temperature display
+    const weatherDesc = document.getElementById('weather-desc'); // Weather description display
+
     // Application State - Variables that track the current state of the UI
     let isMenuOpen = false; // Tracks whether mobile menu is currently open
     let currentSection = 'home'; // Tracks the currently active section for navigation highlighting
@@ -160,6 +168,10 @@
         if (saveUserName(name)) {
             showGreetingMessage(name);
             userNameInput.value = '';
+            // Initialize weather display after showing greeting message
+            setTimeout(() => {
+                initWeatherDisplay();
+            }, 500);
         } else {
             console.error('Failed to save name');
         }
@@ -217,6 +229,142 @@
             greetingBar.classList.remove('fade-out');
         } else {
             greetingBar.classList.add('fade-out');
+        }
+    }
+
+    // ===========================
+    // Weather API Functions
+    // ===========================
+
+    /**
+     * Get user's location using geolocation API with fallback to default city
+     */
+    function getUserLocation() {
+        return new Promise((resolve) => {
+            if (!navigator.geolocation) {
+                // Fallback to default city if geolocation is not supported
+                resolve('Dhahran');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        // Reverse geocoding to get city name from coordinates
+                        const { latitude, longitude } = position.coords;
+                        const reverseGeocodeUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
+                        
+                        const response = await fetch(reverseGeocodeUrl);
+                        if (response.ok) {
+                            const data = await response.json();
+                            const city = data.city || data.locality || 'Dhahran';
+                            resolve(city);
+                        } else {
+                            resolve('Dhahran');
+                        }
+                    } catch (error) {
+                        console.error('Error getting city from coordinates:', error);
+                        resolve('Dhahran');
+                    }
+                },
+                (error) => {
+                    // If user denies location or error occurs, use default city
+                    console.log('Geolocation error, using default city:', error.message);
+                    resolve('Dhahran');
+                },
+                { timeout: 5000 } // 5 second timeout
+            );
+        });
+    }
+
+    /**
+     * Fetch weather data from API
+     */
+    async function fetchWeatherData(city) {
+        try {
+            const url = `https://goweather.herokuapp.com/weather/${encodeURIComponent(city)}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Weather API returned status ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // Validate response data
+            if (!data || !data.temperature) {
+                throw new Error('Invalid weather data received');
+            }
+
+            return {
+                city: city,
+                temp: data.temperature,
+                description: data.description || 'N/A',
+                wind: data.wind || 'N/A'
+            };
+        } catch (error) {
+            console.error('Error fetching weather:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Show loading state for weather
+     */
+    function showWeatherLoading() {
+        if (weatherLoading) weatherLoading.style.display = 'block';
+        if (weatherContent) weatherContent.style.display = 'none';
+        if (weatherError) weatherError.style.display = 'none';
+    }
+
+    /**
+     * Show weather data
+     */
+    function showWeatherData(weatherData) {
+        if (!weatherDisplay || !weatherContent || !weatherTemp || !weatherDesc) return;
+
+        // Update weather content
+        weatherTemp.textContent = weatherData.temp;
+        weatherDesc.textContent = weatherData.description;
+
+        // Show content, hide loading and error
+        weatherLoading.style.display = 'none';
+        weatherError.style.display = 'none';
+        weatherContent.style.display = 'flex';
+    }
+
+    /**
+     * Show weather error message
+     */
+    function showWeatherError() {
+        if (!weatherDisplay || !weatherError) return;
+
+        weatherLoading.style.display = 'none';
+        weatherContent.style.display = 'none';
+        weatherError.style.display = 'flex';
+    }
+
+    /**
+     * Initialize weather display - fetches and displays weather data
+     */
+    async function initWeatherDisplay() {
+        if (!weatherDisplay) return;
+
+        // Show loading state
+        showWeatherLoading();
+
+        try {
+            // Get user location (with fallback to Dhahran)
+            const city = await getUserLocation();
+            
+            // Fetch weather data
+            const weatherData = await fetchWeatherData(city);
+            
+            // Display weather data
+            showWeatherData(weatherData);
+        } catch (error) {
+            console.error('Failed to load weather:', error);
+            showWeatherError();
         }
     }
 
@@ -668,6 +816,15 @@
 
         // Initialize greeting bar
         initGreetingBar();
+
+        // Initialize weather display (only if greeting message is shown)
+        const savedName = getUserName();
+        if (savedName) {
+            // Small delay to ensure greeting message is displayed first
+            setTimeout(() => {
+                initWeatherDisplay();
+            }, 1000);
+        }
 
         // Set initial active nav link
         setActiveNavLink('home');
