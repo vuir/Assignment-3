@@ -102,7 +102,8 @@ https://vuir.github.io/Assignment-3/
 
 ---
 
-# 🤖 AI Usage
+# AI Usage
 This project uses AI tools responsibly.  
 See detailed documentation in: **docs/ai-usage-report.md**
+
 
