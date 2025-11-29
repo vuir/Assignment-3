@@ -89,25 +89,9 @@
         }
     }
 
-    function clearUserName() {
-        try {
-            localStorage.removeItem(USER_NAME_KEY);
-            return true;
-        } catch (error) {
-            console.error('Error clearing name from localStorage:', error);
-            return false;
-        }
-    }
-
     function showGreetingBar() {
         if (greetingBar) {
             greetingBar.classList.add('show');
-        }
-    }
-
-    function hideGreetingBar() {
-        if (greetingBar) {
-            greetingBar.classList.remove('show');
         }
     }
 
@@ -123,9 +107,15 @@
         }
     }
 
-    function showGreetingMessage(name) {
+    function showGreetingMessage(name, isReturningUser = false) {
         if (greetingForm && greetingMessageDisplay && displayedName) {
             displayedName.textContent = name;
+            
+            // Update greeting prefix based on whether user is returning
+            const greetingPrefix = document.getElementById('greeting-prefix');
+            if (greetingPrefix) {
+                greetingPrefix.textContent = isReturningUser ? 'Welcome back' : 'Welcome';
+            }
             
             greetingForm.classList.remove('fade-in');
             greetingForm.classList.add('fade-out');
@@ -206,8 +196,10 @@
         const savedName = getUserName();
         
         if (savedName) {
-            showGreetingMessage(savedName);
+            // User is returning - show "Welcome back"
+            showGreetingMessage(savedName, true);
         } else {
+            // First-time user - show form
             showGreetingForm();
         }
 
@@ -269,7 +261,7 @@
                 },
                 (error) => {
                     // If user denies location or error occurs, use default city
-                    console.log('Geolocation error, using default city:', error.message);
+                    // Geolocation error, using default city
                     resolve('Dhahran');
                 },
                 { timeout: 5000 } // 5 second timeout
@@ -937,11 +929,6 @@
 
         // Set initial greeting bar visibility
         handleGreetingBarVisibility();
-
-        // Add loaded class to body for any CSS animations
-        document.body.classList.add('loaded');
-
-        console.log('Portfolio website initialized successfully!');
     }
 
     // ===========================
